@@ -1,0 +1,77 @@
+version: '3.7'
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: chat-laravel-app
+        container_name: chat-laravel-app
+        restart: unless-stopped
+        tty: true
+        environment:
+            SERVICE_NAME: chat-app
+            SERVICE_TAGS: dev
+        working_dir: /var/www/chatapp
+        volumes:
+            - .:/var/www/chatapp
+            - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        networks:
+            - app-network
+
+    webserver:
+        image: nginx:alpine
+        container_name: nginx-webserver
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - .:/var/www/chatapp
+            - ./nginx/conf.d:/etc/nginx/conf.d
+        networks:
+            - app-network
+
+    websocket:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: websocket_server
+        command: php websocket-server.php
+        volumes:
+            - .:/var/www/chatapp
+        networks:
+            - laravel_network
+
+    npm:
+        image: node:20.10.0
+        container_name: laravel_npm
+        working_dir: /var/www/chatapp
+        volumes:
+            - .:/var/www/chatapp
+        networks:
+            - laravel_network
+
+    db:
+        image: postgres:13
+        container_name: chat-db
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_DB: chat_app
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: secret
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
+
+volumes:
+    postgres_data:
+        driver: local
