@@ -1,10 +1,10 @@
-# Use the official PHP image as the base image
+
 FROM php:8.1.27-fpm
 
-# Set the working directory
+
 WORKDIR /var/www/chatapp
 
-# Install system dependencies
+
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -14,11 +14,16 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libzip-dev \
     zip \
-    unzip
+    unzip \
+    nodejs \
+    npm \
+    libpq-dev
 
-# Install PHP extensions
+
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && docker-php-ext-install pdo_pgsql
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -30,6 +35,7 @@ COPY . /var/www/chatapp
 COPY --chown=www-data:www-data . /var/www/chatapp
 
 # Change the owner of the Laravel directory
+RUN chmod -R 755 /var/www/chatapp/public
 RUN chown -R www-data:www-data /var/www/chatapp
 
 # Expose port 9000 and start php-fpm server

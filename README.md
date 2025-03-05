@@ -27,7 +27,7 @@ Before you start, make sure you have the following installed on your machine:
 
     ```env
     DB_CONNECTION=pgsql
-    DB_HOST=127.0.0.1
+    DB_HOST=db
     DB_PORT=5432
     DB_DATABASE=chat_app
     DB_USERNAME=postgres
@@ -49,7 +49,7 @@ Before you start, make sure you have the following installed on your machine:
 
     ```bash
     docker-compose exec app npm install
-    docker-compose exec app npm run dev
+    docker-compose exec app npm run build
     ```
 
 
